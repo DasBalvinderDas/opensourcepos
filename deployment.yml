@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ospos
+  name: ospos-deployment
 spec:
   replicas: 1
   selector:
@@ -12,11 +12,14 @@ spec:
       labels:
         app: ospos
     spec:
+      volumes:
+        - name: uploads
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
       containers:
         - name: ospos
           image: jekkos/opensourcepos:3.3.8
-          ports:
-            - containerPort: 80
           env:
             - name: CI_ENV
               value: production
@@ -32,21 +35,20 @@ spec:
               value: ospos
             - name: MYSQL_HOST_NAME
               value: mysql
+          ports:
+            - containerPort: 80
           volumeMounts:
             - name: uploads
               mountPath: /home/dasbalvinder_das953/public/uploads
             - name: logs
               mountPath: /home/dasbalvinder_das953/application/logs
-      volumes:
-        - name: uploads
-          emptyDir: {}
-        - name: logs
-          emptyDir: {}
+  strategy:
+    type: Recreate
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ospos
+  name: ospos-service
 spec:
   selector:
     app: ospos
@@ -59,7 +61,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: mysql-deployment
 spec:
   replicas: 1
   selector:
@@ -82,17 +84,21 @@ spec:
               value: admin
             - name: MYSQL_PASSWORD
               value: pointofsale
+          ports:
+            - containerPort: 3306
           volumeMounts:
-            - name: mysql
+            - name: mysql-volume
               mountPath: /var/lib/mysql
       volumes:
-        - name: mysql
+        - name: mysql-volume
           emptyDir: {}
+  strategy:
+    type: Recreate
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql
+  name: mysql-service
 spec:
   selector:
     app: mysql

@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ospos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ospos
+  template:
+    metadata:
+      labels:
+        app: ospos
+    spec:
+      containers:
+        - name: ospos
+          image: jekkos/opensourcepos:3.3.8
+          ports:
+            - containerPort: 80
+          env:
+            - name: CI_ENV
+              value: production
+            - name: FORCE_HTTPS
+              value: "false"
+            - name: PHP_TIMEZONE
+              value: UTC
+            - name: MYSQL_USERNAME
+              value: admin
+            - name: MYSQL_PASSWORD
+              value: pointofsale
+            - name: MYSQL_DB_NAME
+              value: ospos
+            - name: MYSQL_HOST_NAME
+              value: mysql
+          volumeMounts:
+            - name: uploads
+              mountPath: /home/dasbalvinder_das953/opensourcepos/public/uploads
+            - name: logs
+              mountPath: /home/dasbalvinder_das953/application/logs
+      volumes:
+        - name: uploads
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ospos
+spec:
+  selector:
+    app: ospos
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mariadb:10.5
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: pointofsale
+            - name: MYSQL_DATABASE
+              value: ospos
+            - name: MYSQL_USER
+              value: admin
+            - name: MYSQL_PASSWORD
+              value: pointofsale
+          volumeMounts:
+            - name: mysql
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP

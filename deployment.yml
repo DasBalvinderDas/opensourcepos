@@ -34,7 +34,7 @@ spec:
               value: mysql
           volumeMounts:
             - name: uploads
-              mountPath: /home/dasbalvinder_das953/opensourcepos/public/uploads
+              mountPath: /home/dasbalvinder_das953/public/uploads
             - name: logs
               mountPath: /home/dasbalvinder_das953/application/logs
       volumes:
@@ -54,7 +54,7 @@ spec:
     - name: http
       port: 80
       targetPort: 80
-  type: NodePort
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -101,15 +101,3 @@ spec:
       port: 3306
       targetPort: 3306
   type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-service
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 80
-  selector:
-    app: my-app
